@@ -1,4 +1,4 @@
-function cost_total = functie_energie(x)
+function [energie_total, E_PV_total, E_WT_total, E_PHES_total] = functie_energie(x)
     % Variabile de decizie
     NPV = x(1);   % numar panouri
     NWT = x(2);   % numar turbine
@@ -29,10 +29,10 @@ function cost_total = functie_energie(x)
     Cp = 0.35;             % coeficient de performanta 
     v_mean = (4.425+4.770+4.395+3.870+3.570+4.425+5.100+5.280+4.710+3.855+3.615+3.960)/12;            % viteza medie vant (m/s)
     DWTB = 82;                % diametru palelor turbinei (m)
-    A = (pi / 4) * DWTB^2;    % aria rotorului (m²)
+    A = (pi / 4) * DWTB^2;    % aria rotorului 
     % cost_per_kW_WT = 1200; % $
 
-    P_D = 0.5 * rho * v_mean^3;              % [kW/m²] – Eq. 6a - densitate de putere
+    P_D = 0.5 * rho * v_mean^3;              %  – Eq. 6a - densitate de putere
     P_WT = P_D * A * Cp;                % [kW] – Eq. 7a - putere turbina
     hours_per_year = 8760;
     E_WT_total = P_WT * hours_per_year * NWT;  % [kWh/an]
@@ -43,26 +43,26 @@ function cost_total = functie_energie(x)
 % ----------------------
 
     % Parametri fizici PHES (conform lucrare)
-    rho_water = 1000;             % kg/m³
-    g = 9.81;                     % m/s²
-    Q = 0.2;                      % debit mediu zilnic [m³/s] (Q_g)
-    t_sec = 86400;                % secunde într-o zi
+    rho_water = 1000;             % kg/m^3
+    g = 9.81;                     % m/s^2
+    Q = 0.2;                      % debit mediu zilnic (Q_g)
+    t_sec = 86400;                % secunde intr-o zi
     eta_PHES = 0.608;             % eficiență totală PHES (60.8%)
 
-    % Volum total într-o zi
-    V = Q * t_sec;                % [m³]
+    % Volum total intr-o zi
+    V = Q * t_sec;                % [m^3]
     E_PHES_day = eta_PHES * rho_water * V * g * HUR / 3.6e6;   % [kWh/zi]
     E_PHES_total = E_PHES_day * 365;                          % [kWh/an]
 
-    % Cost PHES (estimare economică simplificată)
+    % Cost PHES 
     % cost_per_kWh_PHES = 50;       % USD/kWh (din literatură)
     % cost_PHES = E_PHES_total * cost_per_kWh_PHES;
 
 
 % ----------------------
-% === COST TOTAL ===
+% === ENERGIE TOTAL ===
 % ----------------------
 
-    cost_total = E_PV_total + E_WT_total + E_PHES_total;
+    energie_total = E_PV_total + E_WT_total + E_PHES_total;
 
 end
