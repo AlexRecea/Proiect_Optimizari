@@ -1,38 +1,34 @@
-clc;
-clear;
-close all;
+clc; clear; close all;
 
-% ===============================
-% Parametrii de optimizare
-% ===============================
+% === Parametri ===
+E_cerut = 10.5e6;      % cerere anuală în kWh
+w = 0.5;            % 0 = doar cost, 1 = doar energie
 
-w = 0.1;  % pondere energie vs cost (0 = doar cost, 1 = doar energie)
-fun = @(x) functie_multiobiectiv(x, w);
+% === Funcție obiectiv ===
+fun = @(x) functie_multiobiectiv_LM(x, E_cerut, w);
 
-% Punct de pornire
-x0 = [1; 1; 1];  % [NPV, NWT, HUR]
+% === Limite variabile ===
+lb = [0; 0; 0];           % [NPV, NWT, HUR]
+ub = [3000; 30; 100];     % maxime realiste
 
-% Limite pentru variabilele de decizie
-lb = [0; 0; 0];
-ub = [3000; 200; 40];
+% === Opțiuni GA ===
+options = optimoptions('ga', 'Display', 'iter', ...
+    'MaxGenerations', 100, 'PopulationSize', 100);
 
-% Setări optimizare
-options = optimoptions('fmincon', 'Display', 'iter');
+% === Optimizare ===
+[x_opt, fval] = ga(fun, 3, [], [], [], [], lb, ub, [], options);
 
-% Optimizare
-[x_opt, fval] = fmincon(fun, x0, [], [], [], [], lb, ub, @constr_energie_minima, options);
+% === Rezultate finale ===
+[E_final, E_PV, E_WT, E_PHES] = functie_energie(x_opt);
+C_final = functie_cost_total(x_opt);
 
-% ===============================
-% Afișare rezultate
-% ===============================
-
-E_final = functie_energie(x_opt);
-C_final = functie_cost(x_opt);
-E_final_GW = E_final / 1000000;
-C_final_Mil = C_final / 1000000;
-fprintf('\n--- Rezultat Multi-Obiectiv (w = %.2f) ---\n', w);
-fprintf('Număr panouri PV     : %.0f\n', x_opt(1));
-fprintf('Număr turbine WIND   : %.0f\n', x_opt(2));
-fprintf('Înălțime rezervor PHES: %.2f m\n', x_opt(3));
-fprintf('Energie produsă      : %.2f GWh\n', E_final_GW);
-fprintf('Cost total           : %.4f Mil_USD\n', C_final_Mil);
+fprintf('\n=== Rezultat Final GA (w = %.2f) ===\n', w);
+fprintf('Panouri PV     : %.0f\n', x_opt(1));
+fprintf('Turbine WIND   : %.0f\n', x_opt(2));
+fprintf('Înălțime PHES  : %.2f m\n', x_opt(3));
+fprintf('Energie totală : %.2f GWh\n', E_final / 1e6);
+fprintf(' - PV          : %.2f GWh\n', E_PV / 1e6);
+fprintf(' - Eolian      : %.2f GWh\n', E_WT / 1e6);
+fprintf(' - PHES        : %.2f GWh\n', E_PHES / 1e6);
+fprintf('Cost total     : %.2f Mil USD\n', C_final / 1e6);
+fprintf('Diferență față de cerere: %.2f kWh\n', E_final - E_cerut);
